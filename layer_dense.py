@@ -2,24 +2,28 @@ import numpy as np
 
 class Layer_Dense:
     def __init__(self, n_inputs, n_neurons):
-        self.weights = np.random.rand(n_inputs, n_neurons)
+        self.weights = np.random.rand(n_inputs, n_neurons) - 0.5
         self.biases = np.zeros((1, n_neurons))
 
     def set_weights(self, weights):
+        '''Set the weights of the layer'''
         self.weights = weights
     
     def set_biases(self, biases):
+        '''Set the biases of the layer'''
         self.biases = biases
     
     def forward(self, inputs):
-        output = self.activation_function(np.dot(inputs, self.weights) + self.biases)
-        return output
-
-    def activation_function(self, inputs):
-        '''Activation ReLU'''
-        output = np.maximum(0, inputs)
-        return output
+        '''ouput = inputs * weights + biases'''
+        self.inputs = inputs
+        output = np.dot(self.inputs, self.weights) + self.biases
+        self.output = output
+        return self.output
     
-    def activation_function_derivative(self, outputs):
-        '''Derivative of ReLU activation function'''
-        return 0 if outputs <= 0 else 1
+    def backward(self, output_error, learning_rate):
+        '''Backpropagation'''
+        input_error = np.dot(output_error, self.weights.T)
+        weights_error = np.dot(self.inputs.T, output_error)
+        self.weights -= learning_rate * weights_error
+        #self.biases -= learning_rate * np.mean(output_error)
+        return input_error

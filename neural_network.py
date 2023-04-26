@@ -1,34 +1,39 @@
 import numpy as np
-import matplotlib.pyplot as plt
-from layer_dense import Layer_Dense
-from output_layer import Layer_Output
+
+LEARNING_RATE = 0.1
 
 class Neural_Network:
-    def __init__(self, inputs) -> None:
-        self.input_layer = inputs
-        self.layer1 = Layer_Dense(2, 5)
-        self.layer2 = Layer_Dense(5, 5)
-        self.output_layer = Layer_Output(5, 3)
+    def __init__(self) -> None:
+        self.layers = []
 
-    def loss_categorical_cross_entropy(self, y_valid, y_pred):
-        '''Loss is a measure of how wrong the model is.
-        We want to minimize the loss.'''
-        # Clip data to prevent division by 0 which causes inf values with numpy
-        y_pred_clipped = np.clip(y_pred, 1e-7, 1 - 1e-7)
-        # Calculate the loss
-        loss = np.mean(-np.log(y_pred_clipped[range(len(y_pred)), y_valid]))
-        return loss
+    def loss(self, y_true, y_pred):
+        '''MSE loss function'''
+        return np.mean(y_true - y_pred) ** 2
     
-    def train(self, X, y):
-        output = self.forward(X)
-        backward = self.backward(output, y)
+    def loss_derivative(self, y_true, y_pred):
+        '''Derivative of MSE loss function'''
+        return -2 * (y_true - y_pred) / y_pred.shape[0]
+    
+    def add_layer(self, layer):
+        '''Add a layer to the network'''
+        self.layers.append(layer)
 
-
-    def forward(self, X):
-        output = self.output_layer.forward(self.layer2.forward(self.layer1.forward(X)))
-        self.output = output
+    def train(self, X_train, y_train):
+        '''Train the network on a sample'''
+        # Forward propagation
+        output = X_train
+        for layer in self.layers:
+            output = layer.forward(output)
+        output_error = self.loss(y_train, output)
+        # Backpropagation
+        #output_error = self.loss_derivative(y_train, output)
+        for layer in reversed(self.layers):
+            output_error = layer.backward(output_error, LEARNING_RATE)
+    
+    def predict(self, X_test):
+        '''Predict the output of the network'''
+        output = X_test
+        for layer in self.layers:
+            output = layer.forward(output)
         return output
 
-    def backward(self, y_pred, y_valid):
-        loss = self.loss_categorical_cross_entropy(y_valid, y_pred)
-        slope = self.output_layer.activation_function_derivative(y_pred)
