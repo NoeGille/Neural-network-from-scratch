@@ -5,10 +5,18 @@ import numpy as np
 import matplotlib.pyplot as plt
 from keras.datasets import mnist
 from keras.utils import to_categorical
+
+
+# Load dataset
 (X_train, y_train), (X_test, y_test) = mnist.load_data()
 
 X_train = X_train.reshape(-1, 28*28)
 X_test = X_test.reshape(-1, 28*28)
+X_train = (X_train - X_train.mean()) / X_train.std()
+y_train = to_categorical(y_train)
+X_test = (X_test - X_test.mean()) / X_test.std()
+y_test = to_categorical(y_test)
+
 
 # Define activation functions and their derivatives
 def ReLU(inputs):
@@ -31,22 +39,23 @@ def sigmoid_derivative(inputs):
      output = sigmoid(inputs) * (1 - sigmoid(inputs))
      return output
 
-def softmax(inputs):
-     '''Softmax activation function'''
-     exp_values = np.exp(inputs)
-     probabilities = exp_values / np.sum(exp_values, axis=1, keepdims=True)
-     
-     return probabilities
+def softmax(z):
+    assert len(z.shape) == 2
+    s = np.max(z, axis=1)
+    s = s[:, np.newaxis] # necessary step to do broadcasting
+    e_x = np.exp(z - s)
+    div = np.sum(e_x, axis=1)
+    div = div[:, np.newaxis] # dito
+    return e_x / div
 
-def softmax_derivative(inputs):
-     '''Derivative of Softmax'''
-     return inputs * (1 - inputs)
+def softmax_derivative(z):
+    return softmax(z) * (1 - softmax(z))
 
 def tanh(x):
     return np.tanh(x)
 
 def tanh_derivative(x):
-     return 1 - x ** 2
+     return 1 - np.tanh(x) ** 2
 
 nn = Neural_Network()
 nn.add_layer(Layer_Dense(28*28, 100))
@@ -56,13 +65,16 @@ nn.add_layer(ActivationLayer(tanh, tanh_derivative))
 nn.add_layer(Layer_Dense(100, 10))
 nn.add_layer(ActivationLayer(softmax, softmax_derivative))
 
-BATCH_SIZE = 128
-X_train = (X_train - X_train.mean()) / X_train.std()
-y_train = to_categorical(y_train)
-for i in range(1000):
+BATCH_SIZE = 64
+
+for i in range(100):
      X = X_train[i*BATCH_SIZE:(i+1)*BATCH_SIZE]
      y = y_train[i*BATCH_SIZE:(i+1)*BATCH_SIZE]
      nn.train(X, y)
 y_pred = nn.predict(X_test)
+print(y_pred.argmax(axis=1))
+print(y_test.argmax(axis=1))
+print(np.sum(np.equal(np.argmax(y_test, axis=1),np.argmax(y_pred, axis=1))) / len(y_test))
 
-print(np.sum(np.equal(y_test,np.argmax(y_pred, axis=1))) / len(y_test))
+
+
