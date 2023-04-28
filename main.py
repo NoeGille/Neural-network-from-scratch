@@ -39,14 +39,10 @@ def sigmoid_derivative(inputs):
      output = sigmoid(inputs) * (1 - sigmoid(inputs))
      return output
 
-def softmax(z):
-    assert len(z.shape) == 2
-    s = np.max(z, axis=1)
-    s = s[:, np.newaxis] # necessary step to do broadcasting
-    e_x = np.exp(z - s)
-    div = np.sum(e_x, axis=1)
-    div = div[:, np.newaxis] # dito
-    return e_x / div
+def softmax(x):
+    shiftx = x - np.max(x)
+    exps = np.exp(shiftx)
+    return exps / np.sum(exps)
 
 def softmax_derivative(z):
     return softmax(z) * (1 - softmax(z))
@@ -63,11 +59,11 @@ nn.add_layer(ActivationLayer(tanh, tanh_derivative))
 nn.add_layer(Layer_Dense(100, 100))
 nn.add_layer(ActivationLayer(tanh, tanh_derivative))
 nn.add_layer(Layer_Dense(100, 10))
-nn.add_layer(ActivationLayer(softmax, softmax_derivative))
+nn.add_layer(ActivationLayer(softmax, lambda x:x))
 
-BATCH_SIZE = 64
+BATCH_SIZE = 16
 
-for i in range(100):
+for i in range(5):
      X = X_train[i*BATCH_SIZE:(i+1)*BATCH_SIZE]
      y = y_train[i*BATCH_SIZE:(i+1)*BATCH_SIZE]
      nn.train(X, y)

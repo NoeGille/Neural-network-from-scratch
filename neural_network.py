@@ -8,8 +8,7 @@ class Neural_Network:
 
     def loss(self, y_true, y_pred):
         '''MSE loss function'''
-        print(y_pred)
-        return np.mean(np.square(y_true - y_pred),axis=0)
+        return np.square(y_true - y_pred)
     
     def loss_derivative(self, y_true, y_pred):
         '''Derivative of MSE loss function'''
@@ -26,10 +25,8 @@ class Neural_Network:
         for layer in self.layers:
             output = layer.forward(output)
         output_error = self.loss(y_train, output)
-        print(output_error)
-        print("output_error_shape", output_error.shape)
         # Backpropagation
-        # output_error = self.loss_derivative(y_train, output)
+        output_error = self.loss_derivative(y_train, output)
         for layer in reversed(self.layers):
            
             output_error = layer.backward(output_error, LEARNING_RATE)

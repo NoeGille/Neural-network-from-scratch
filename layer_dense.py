@@ -25,5 +25,5 @@ class Layer_Dense:
         input_error = np.dot(output_error, self.weights.T)
         weights_error = np.dot(self.inputs.T, output_error)
         self.weights -= learning_rate * weights_error
-        #self.biases -= learning_rate * np.mean(output_error)
+        #self.biases -= learning_rate * output_error
         return input_error
